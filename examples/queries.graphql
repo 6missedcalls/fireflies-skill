@@ -1,0 +1,379 @@
+# Fireflies.ai GraphQL Query Examples
+# Use with: fireflies.sh raw '<query>' '{"var": "value"}'
+
+# ============================================
+# QUERIES
+# ============================================
+
+# Get current user info
+query GetUser {
+  user {
+    user_id
+    email
+    name
+    num_transcripts
+    recent_meeting
+    minutes_consumed
+    is_admin
+    integrations
+  }
+}
+
+# List recent transcripts (paginated)
+query ListTranscripts($limit: Int, $skip: Int, $mine: Boolean) {
+  transcripts(limit: $limit, skip: $skip, mine: $mine) {
+    id
+    title
+    date
+    duration
+    participants
+    organizer_email
+  }
+}
+
+# Filter by date range
+query TranscriptsByDateRange($fromDate: DateTime!, $toDate: DateTime!, $limit: Int) {
+  transcripts(fromDate: $fromDate, toDate: $toDate, limit: $limit) {
+    id
+    title
+    date
+    duration
+    participants
+  }
+}
+
+# Search transcripts by keyword (title only)
+query SearchByTitle($keyword: String!, $limit: Int) {
+  transcripts(keyword: $keyword, scope: title, limit: $limit) {
+    id
+    title
+    date
+    participants
+  }
+}
+
+# Search transcripts by keyword (full text - title + sentences)
+query SearchFullText($keyword: String!, $limit: Int) {
+  transcripts(keyword: $keyword, scope: all, limit: $limit) {
+    id
+    title
+    date
+    participants
+    summary { overview }
+  }
+}
+
+# Filter by participants
+query TranscriptsByParticipants($participants: [String]!, $limit: Int) {
+  transcripts(participants: $participants, limit: $limit) {
+    id
+    title
+    date
+    participants
+    meeting_attendees { displayName email }
+  }
+}
+
+# Get single transcript with full details
+query GetTranscript($id: String!) {
+  transcript(id: $id) {
+    id
+    title
+    date
+    duration
+    privacy
+    
+    # Participants
+    participants
+    organizer_email
+    fireflies_users
+    meeting_attendees {
+      displayName
+      email
+      phoneNumber
+    }
+    meeting_attendance {
+      name
+      join_time
+      leave_time
+    }
+    
+    # Speakers
+    speakers {
+      id
+      name
+    }
+    
+    # Full transcript
+    sentences {
+      index
+      speaker_name
+      speaker_id
+      text
+      start_time
+      end_time
+      ai_filters {
+        task
+        question
+        sentiment
+      }
+    }
+    
+    # Summary
+    summary {
+      keywords
+      action_items
+      overview
+      short_summary
+      bullet_gist
+      topics_discussed
+      transcript_chapters
+    }
+    
+    # Analytics
+    analytics {
+      sentiments {
+        positive_pct
+        neutral_pct
+        negative_pct
+      }
+      categories {
+        tasks
+        questions
+        metrics
+        date_times
+      }
+      speakers {
+        speaker_id
+        name
+        duration
+        word_count
+        words_per_minute
+        questions
+        filler_words
+      }
+    }
+    
+    # URLs
+    transcript_url
+    audio_url
+    video_url
+    meeting_link
+    
+    # Calendar
+    cal_id
+    calendar_type
+  }
+}
+
+# Get just summary and action items
+query GetSummary($id: String!) {
+  transcript(id: $id) {
+    id
+    title
+    date
+    summary {
+      keywords
+      action_items
+      overview
+      short_summary
+      topics_discussed
+    }
+  }
+}
+
+# Get transcript sentences (for RAG ingestion)
+query GetSentences($id: String!) {
+  transcript(id: $id) {
+    id
+    title
+    date
+    speakers { id name }
+    sentences {
+      index
+      speaker_name
+      text
+      start_time
+      end_time
+    }
+  }
+}
+
+# Get active meetings (in progress)
+query ActiveMeetings {
+  active_meetings {
+    id
+    title
+    meeting_link
+    state
+    participants
+    start_time
+  }
+}
+
+# Get channels
+query GetChannels {
+  channels {
+    id
+    title
+    is_private
+    created_at
+    members {
+      email
+      name
+    }
+  }
+}
+
+# Get user groups
+query GetUserGroups($mine: Boolean) {
+  user_groups(mine: $mine) {
+    id
+    name
+    members {
+      user_id
+      email
+      name
+    }
+  }
+}
+
+# ============================================
+# ASKFRED (AI Q&A)
+# ============================================
+
+# Ask about a specific meeting
+mutation AskAboutMeeting($query: String!, $transcriptId: String!) {
+  createAskFredThread(input: {
+    query: $query
+    transcript_id: $transcriptId
+    response_language: "en"
+    format_mode: "markdown"
+  }) {
+    message {
+      id
+      thread_id
+      answer
+      suggested_queries
+    }
+  }
+}
+
+# Ask across multiple meetings (by date range)
+mutation AskAcrossMeetings($query: String!, $startTime: DateTime!, $endTime: DateTime!) {
+  createAskFredThread(input: {
+    query: $query
+    filters: {
+      start_time: $startTime
+      end_time: $endTime
+    }
+    response_language: "en"
+    format_mode: "markdown"
+  }) {
+    message {
+      id
+      thread_id
+      answer
+      suggested_queries
+    }
+  }
+}
+
+# Ask about meetings with specific participants
+mutation AskByParticipants($query: String!, $participants: [String]!) {
+  createAskFredThread(input: {
+    query: $query
+    filters: {
+      participants: $participants
+    }
+    response_language: "en"
+  }) {
+    message {
+      answer
+      suggested_queries
+    }
+  }
+}
+
+# Continue a conversation thread
+mutation ContinueThread($threadId: String!, $query: String!) {
+  continueAskFredThread(input: {
+    thread_id: $threadId
+    query: $query
+  }) {
+    message {
+      answer
+      suggested_queries
+    }
+  }
+}
+
+# List AskFred threads
+query ListAskFredThreads {
+  askfred_threads {
+    id
+    title
+    transcript_id
+    created_at
+  }
+}
+
+# ============================================
+# MUTATIONS
+# ============================================
+
+# Upload audio for transcription
+mutation UploadAudio($input: AudioUploadInput!) {
+  uploadAudio(input: $input) {
+    success
+    title
+    message
+  }
+}
+# Variables example:
+# {
+#   "input": {
+#     "url": "https://example.com/audio.mp3",
+#     "title": "Team Standup 2024-01-15"
+#   }
+# }
+
+# Update meeting title
+mutation UpdateTitle($transcriptId: String!, $title: String!) {
+  updateMeetingTitle(transcript_id: $transcriptId, title: $title) {
+    success
+  }
+}
+
+# Update meeting privacy
+mutation UpdatePrivacy($transcriptId: String!, $privacy: MeetingPrivacy!) {
+  updateMeetingPrivacy(transcript_id: $transcriptId, privacy: $privacy) {
+    success
+  }
+}
+# Privacy options: link, owner, participants, teammatesandparticipants, teammates
+
+# Delete transcript
+mutation DeleteTranscript($transcriptId: String!) {
+  deleteTranscript(id: $transcriptId) {
+    success
+  }
+}
+
+# Create soundbite/bite
+mutation CreateBite($transcriptId: ID!, $startTime: Float!, $endTime: Float!) {
+  createBite(transcript_id: $transcriptId, start_time: $startTime, end_time: $endTime) {
+    id
+    title
+    video_url
+    duration
+  }
+}
+
+# Add bot to live meeting
+mutation AddToLive($meetingLink: String!, $title: String) {
+  addToLive(meeting_link: $meetingLink, title: $title) {
+    success
+    message
+  }
+}
