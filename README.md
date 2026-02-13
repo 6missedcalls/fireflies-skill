@@ -12,6 +12,7 @@
   <a href="https://docs.fireflies.ai"><img alt="API Docs" src="https://img.shields.io/badge/API-Docs-blue?style=flat-square&logo=graphql"></a>
   <a href="#license"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green?style=flat-square"></a>
   <a href="https://app.fireflies.ai/integrations/custom/fireflies"><img alt="Get API Key" src="https://img.shields.io/badge/Get-API_Key-orange?style=flat-square"></a>
+  <a href="https://skills.sh/6missedcalls/fireflies-skill/fireflies"><img alt="skills.sh" src="https://img.shields.io/badge/skills.sh-Install-blueviolet?style=flat-square"></a>
 </p>
 
 ---
@@ -49,10 +50,16 @@ export FIREFLIES_API_KEY="your_api_key_here"
 
 ### 3. Install the skill
 
-Copy this directory into your Claude Code skills folder, or clone directly:
+**Via [skills.sh](https://skills.sh/) (recommended):**
 
 ```bash
-git clone https://github.com/ianperez/fireflies-skill.git
+npx skills add 6missedcalls/fireflies-skill@fireflies
+```
+
+**Or clone manually:**
+
+```bash
+git clone https://github.com/6missedcalls/fireflies-skill.git
 ```
 
 ### 4. Use it
