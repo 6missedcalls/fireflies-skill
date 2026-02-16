@@ -1,3 +1,11 @@
+---
+name: fireflies
+description: Manage Fireflies.ai meeting transcripts, summaries, and action items via GraphQL API.
+license: MIT
+metadata:
+  author: 6missedcalls
+  version: "1.0.0"
+---
 # Fireflies.ai Integration Skill
 
 Manage Fireflies.ai meeting transcripts, summaries, and action items via GraphQL API.
@@ -158,7 +166,7 @@ When user asks to create Jira tasks from meetings:
 
 1. **Get meeting summary**:
    ```graphql
-   transcript(id: "...") { 
+   transcript(id: "...") {
      summary { action_items }
      participants
      meeting_attendees { displayName email }
