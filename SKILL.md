@@ -6,6 +6,7 @@ metadata:
   author: 6missedcalls
   version: "1.0.0"
 ---
+
 # Fireflies.ai Integration Skill
 
 Manage Fireflies.ai meeting transcripts, summaries, and action items via GraphQL API.
